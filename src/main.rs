@@ -4,7 +4,7 @@ use minigrep::Config;
 
 fn main() {
 
-    let args: Vec<String> = env::args().collect();
+    let args = env::args();
     
     let config: Config = match Config::build_config(args) {
         Ok(config) => config,

@@ -22,13 +22,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>>{
 
 fn search<'a>(query: &str, contents: &'a str) -> Option<Vec<&'a str>>{
 
-    let mut result = vec![];
-
-    for line in contents.lines(){
-        if line.contains(query){
-            result.push(line);
-        }
-    }
+    let result: Vec<&str> = contents.lines().filter(|line| line.contains(query)).collect();
 
     if result.len() == 0 {
         return None;
@@ -48,24 +42,32 @@ pub struct Config{
 
 impl Config{
 
-    pub fn build_config(args: Vec<String>) -> Result<Config, &'static str>{
+    pub fn build_config(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str>{
 
-        if args.len()!=3{
-            return Err("Expected 2 input arguments.");
-        } 
+        args.next();
 
-        let file_path = args[2].clone();
+        let query = match args.next(){
+            Some(query) => query,
+            None => return Err("Expected query."),
+        };
+        
+        let file_path = match args.next(){
+            Some(file_path) => file_path,
+            None => return Err("Expected file path."),
+        };
+
         let case_sensitive = 
             match env::var("CASE_SENSITIVE"){
                 Ok(data) => if data=="0" {false} else {true},
                 Err(_) => true,
             };
+
         let query =
             if case_sensitive{
-                args[1].clone()
+                query
             }
             else{
-                args[1].clone().to_lowercase()
+                query.to_lowercase()
             };
 
         Ok(Config{query, file_path, case_sensitive})
